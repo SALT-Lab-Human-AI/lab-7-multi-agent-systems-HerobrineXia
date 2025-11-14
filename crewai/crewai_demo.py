@@ -146,6 +146,7 @@ def create_flight_agent(destination: str, trip_dates: str):
     """Create the Flight Specialist agent with real research tools."""
     return Agent(
         role="Flight Specialist",
+
         goal=f"Research and recommend the best flight options for the {destination} trip "
              f"({trip_dates}), considering dates, airlines, prices, and flight durations. "
              f"Use real data from flight booking sites to provide accurate, current pricing.",
@@ -153,7 +154,10 @@ def create_flight_agent(destination: str, trip_dates: str):
                   "airline schedules, pricing patterns, and travel routes. You excel at "
                   "finding the best flight options that balance cost and convenience. "
                   "You have booked thousands of flights and know the best times to fly. "
-                  "You always research current prices and use real booking site data.",
+                  "You always research current prices and use real booking site data."
+                  "You are skilled at comparing different airlines and routes to find the best options."
+                  "You stay updated on airline policies and travel trends.",
+                  
         tools=[search_flight_prices],
         verbose=True,
         allow_delegation=False
@@ -285,6 +289,20 @@ def create_itinerary_task(itinerary_agent, destination: str, trip_duration: str,
     )
 
 
+def create_local_insights_task(itinerary_agent, destination: str, trip_dates: str):
+    """Define a task for cultural tips, packing, and document prep."""
+    return Task(
+        description=f"Compile real travel-readiness guidance for a trip to {destination} ({trip_dates}). "
+                   f"Research official tourism sites, government advisories, and trusted travel guides to "
+                   f"outline entry requirements (visas, documents), key cultural etiquette tips, and weather-based "
+                   f"packing suggestions. Provide actionable bullet points with references to the real sources used.",
+        agent=itinerary_agent,
+        expected_output=f"A concise travel readiness brief for {destination} covering documentation needs, "
+                       f"top 3-4 cultural etiquette considerations, and packing recommendations tied to the actual "
+                       f"season/weather for {trip_dates}, citing real sources when possible."
+    )
+
+
 def create_budget_task(budget_agent, destination: str, trip_duration: str):
     """Define the budget calculation task using real cost data."""
     return Task(
@@ -381,6 +399,7 @@ def main(destination: str = "Iceland", trip_duration: str = "5 days",
     flight_task = create_flight_task(flight_agent, destination, trip_dates, departure_city)
     hotel_task = create_hotel_task(hotel_agent, destination, trip_dates)
     itinerary_task = create_itinerary_task(itinerary_agent, destination, trip_duration, trip_dates)
+    local_insights_task = create_local_insights_task(itinerary_agent, destination, trip_dates)
     budget_task = create_budget_task(budget_agent, destination, trip_duration)
 
     print("Tasks created successfully!")
@@ -388,12 +407,12 @@ def main(destination: str = "Iceland", trip_duration: str = "5 days",
 
     # Create the crew with sequential task execution
     print("Forming the Travel Planning Crew...")
-    print("Task Sequence: FlightAgent → HotelAgent → ItineraryAgent → BudgetAgent")
+    print("Task Sequence: FlightAgent → HotelAgent → ItineraryAgent → Local Insights → BudgetAgent")
     print()
 
     crew = Crew(
         agents=[flight_agent, hotel_agent, itinerary_agent, budget_agent],
-        tasks=[flight_task, hotel_task, itinerary_task, budget_task],
+        tasks=[flight_task, hotel_task, itinerary_task, local_insights_task, budget_task],
         verbose=True,
         process="sequential"  # Sequential task execution
     )
